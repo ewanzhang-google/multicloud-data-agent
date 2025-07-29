@@ -25,15 +25,17 @@ from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.tools.tool_context import ToolContext
 from .remote_agent_connection import RemoteAgentConnections, TaskUpdateCallback
-from a2a_client.card_resolver import A2ACardResolver
-from a2a_types import (
+
+from a2a.client import A2ACardResolver
+from a2a.types import (
     AgentCard,
-    Message,
-    TaskState,
-    Task,
-    TaskSendParams,
-    TextPart,
+    MessageSendParams,
     Part,
+    SendMessageRequest,
+    SendMessageResponse,
+    SendMessageSuccessResponse,
+    Task,
+    TaskState
 )
 
 
@@ -72,7 +74,7 @@ class PurchasingAgent:
 
     def create_agent(self) -> Agent:
         return Agent(
-            model="gemini-2.0-flash-001",
+            model="gemini-2.5-flash-lite",
             name="purchasing_agent",
             instruction=self.root_instruction,
             before_model_callback=self.before_model_callback,
@@ -174,48 +176,49 @@ Current active seller agent: {current_agent["active_agent"]}
         task: Task
         messageId = ""
         metadata = {}
-        if "input_message_metadata" in state:
-            metadata.update(**state["input_message_metadata"])
-            if "message_id" in state["input_message_metadata"]:
-                messageId = state["input_message_metadata"]["message_id"]
-        if not messageId:
-            messageId = str(uuid.uuid4())
-        metadata.update(**{"conversation_id": sessionId, "message_id": messageId})
-        request: TaskSendParams = TaskSendParams(
-            id=taskId,
-            sessionId=sessionId,
-            message=Message(
-                role="user",
-                parts=[TextPart(text=task)],
-                metadata=metadata,
-            ),
-            acceptedOutputModes=["text", "text/plain"],
-            # pushNotification=None,
-            metadata={"conversation_id": sessionId},
-        )
-        task = await client.send_task(request, self.task_callback)
-        # Assume completion unless a state returns that isn't complete
-        state["session_active"] = task.status.state not in [
-            TaskState.COMPLETED,
-            TaskState.CANCELED,
-            TaskState.FAILED,
-            TaskState.UNKNOWN,
-        ]
-        if task.status.state == TaskState.INPUT_REQUIRED:
-            # Force user input back
-            tool_context.actions.escalate = True
-        elif task.status.state == TaskState.COMPLETED:
-            # Reset active agent is task is completed
-            state["active_agent"] = "None"
+        if 'input_message_metadata' in state:
+            metadata.update(**state['input_message_metadata'])
+            if 'message_id' in state['input_message_metadata']:
+                message_id = state['input_message_metadata']['message_id']
+        if not message_id:
+            message_id = str(uuid.uuid4())
 
-        response = []
-        if task.status.message:
-            # Assume the information is in the task message.
-            response.extend(convert_parts(task.status.message.parts, tool_context))
-        if task.artifacts:
-            for artifact in task.artifacts:
-                response.extend(convert_parts(artifact.parts, tool_context))
-        return response
+        payload = {
+            'message': {
+                'role': 'user',
+                'parts': [
+                    {'type': 'text', 'text': task}
+                ],  # Use the 'task' argument here
+                'messageId': message_id,
+            },
+        }
+
+        if task_id:
+            payload['message']['taskId'] = task_id
+
+        if context_id:
+            payload['message']['contextId'] = context_id
+
+        message_request = SendMessageRequest(
+            id=message_id, params=MessageSendParams.model_validate(payload)
+        )
+        send_response: SendMessageResponse = await client.send_message(
+            message_request=message_request
+        )
+        print(
+            'send_response',
+            send_response.model_dump_json(exclude_none=True, indent=2),
+        )
+
+        if not isinstance(send_response.root, SendMessageSuccessResponse):
+            print('received non-success response. Aborting get task ')
+            return None
+
+        if not isinstance(send_response.root.result, Task):
+            print('received non-task response. Aborting get task ')
+            return None
+
+        return send_response.root.result
 
 
 def convert_parts(parts: list[Part], tool_context: ToolContext):

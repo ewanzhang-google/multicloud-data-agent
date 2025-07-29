@@ -109,9 +109,10 @@ async def main() -> None:
             'message': {
                 'role': 'user',
                 'parts': [
-                    {'kind': 'text', 'text': '1 Margerita pls'}
+                    {'kind': 'text', 'text': 'ah sorry, I want to add 1 bbq chicken too'}
                 ],
                 'messageId': uuid4().hex,
+                'contextId': "user123"
             },
         }
         request = SendMessageRequest(

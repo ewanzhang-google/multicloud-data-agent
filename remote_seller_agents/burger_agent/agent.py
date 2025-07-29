@@ -28,14 +28,6 @@ load_dotenv()
 litellm.vertex_project = os.getenv("GCLOUD_PROJECT_ID")
 litellm.vertex_location = os.getenv("GCLOUD_LOCATION")
 
-
-class ResponseFormat(BaseModel):
-    """Respond to the user in this format."""
-
-    status: Literal["input_required", "completed", "error"] = "input_required"
-    message: str
-
-
 class OrderItem(BaseModel):
     name: str
     quantity: int
@@ -123,14 +115,8 @@ Provided below is the available burger menu and it's related price:
 
         agent_task = Task(
             description=self.TaskInstruction,
-            output_pydantic=ResponseFormat,
             agent=burger_agent,
-            expected_output=(
-                "A JSON object with 'status' and 'message' fields."
-                "Set response status to input_required if asking for user order confirmation."
-                "Set response status to error if there is an error while processing the request."
-                "Set response status to completed if the request is complete."
-            ),
+            expected_output="Response to the user in friendly and helpful manner",
         )
 
         crew = Crew(
@@ -142,35 +128,7 @@ Provided below is the available burger menu and it's related price:
 
         inputs = {"user_prompt": query, "session_id": sessionId}
         response = crew.kickoff(inputs)
-        return self.get_agent_response(response)
-
-    def get_agent_response(self, response):
-        response_object = response.pydantic
-        if response_object and isinstance(response_object, ResponseFormat):
-            if response_object.status == "input_required":
-                return {
-                    "is_task_complete": False,
-                    "require_user_input": True,
-                    "content": response_object.message,
-                }
-            elif response_object.status == "error":
-                return {
-                    "is_task_complete": False,
-                    "require_user_input": True,
-                    "content": response_object.message,
-                }
-            elif response_object.status == "completed":
-                return {
-                    "is_task_complete": True,
-                    "require_user_input": False,
-                    "content": response_object.message,
-                }
-
-        return {
-            "is_task_complete": False,
-            "require_user_input": True,
-            "content": "We are unable to process your request at the moment. Please try again.",
-        }
+        return response
 
 
 if __name__ == "__main__":
