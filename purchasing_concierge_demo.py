@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import gradio as gr
+
 from typing import List, Dict, Any
 from purchasing_concierge.agent import root_agent as purchasing_agent
 from google.adk.sessions import InMemorySessionService
@@ -33,9 +34,6 @@ PURCHASING_AGENT_RUNNER = Runner(
     app_name=APP_NAME,  # Associates runs with our app
     session_service=SESSION_SERVICE,  # Uses our session manager
 )
-SESSION_SERVICE.create_session(
-    app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
-)
 
 
 async def get_response_from_agent(
@@ -52,6 +50,14 @@ async def get_response_from_agent(
         Text response from the backend service.
     """
     # try:
+
+    if not await SESSION_SERVICE.get_session(
+        app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID   
+    ):
+        await SESSION_SERVICE.create_session(
+            app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
+        )
+
     events_iterator: AsyncIterator[Event] = PURCHASING_AGENT_RUNNER.run_async(
         user_id=USER_ID,
         session_id=SESSION_ID,

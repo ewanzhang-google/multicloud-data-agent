@@ -18,7 +18,7 @@ import json
 import uuid
 from typing import List
 import httpx
-
+import asyncio
 
 from google.adk import Agent
 from google.adk.agents.readonly_context import ReadonlyContext
@@ -54,12 +54,11 @@ class PurchasingAgent:
         self.task_callback = task_callback
         self.remote_agent_connections: dict[str, RemoteAgentConnections] = {}
         self.cards: dict[str, AgentCard] = {}
+        httpx_client = httpx.AsyncClient(timeout=httpx.Timeout(timeout=30))
         for address in remote_agent_addresses:
-            card_resolver = A2ACardResolver(address)
+            card_resolver = A2ACardResolver(base_url=address, httpx_client=httpx_client)
             try:
-                card = card_resolver.get_agent_card()
-                # The URL accessed here should be the same as the one provided in the agent card
-                # However, in this demo we are using the URL provided in the key arguments
+                card = asyncio.run(card_resolver.get_agent_card())
                 remote_connection = RemoteAgentConnections(
                     agent_card=card, agent_url=address
                 )
@@ -168,13 +167,9 @@ Current active seller agent: {current_agent["active_agent"]}
         client = self.remote_agent_connections[agent_name]
         if not client:
             raise ValueError(f"Client not available for {agent_name}")
-        if "task_id" in state:
-            taskId = state["task_id"]
-        else:
-            taskId = str(uuid.uuid4())
-        sessionId = state["session_id"]
+        session_id = state["session_id"]
         task: Task
-        messageId = ""
+        message_id = ""
         metadata = {}
         if 'input_message_metadata' in state:
             metadata.update(**state['input_message_metadata'])
@@ -190,6 +185,7 @@ Current active seller agent: {current_agent["active_agent"]}
                     {'type': 'text', 'text': task}
                 ],  # Use the 'task' argument here
                 'messageId': message_id,
+                'sessionId': session_id,
             },
         }
 
