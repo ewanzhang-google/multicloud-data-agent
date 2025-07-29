@@ -105,9 +105,9 @@ Provided below is the available burger menu and it's related price:
 """
     SUPPORTED_CONTENT_TYPES = ["text", "text/plain"]
 
-    def invoke(self, query, sessionId) -> str:
+    def invoke(self, query, sessionId) -> dict:
         model = LLM(
-            model="vertex_ai/gemini-2.0-flash",  # Use base model name without provider prefix
+            model="vertex_ai/gemini-2.5-flash-lite",  # Use base model name without provider prefix
         )
         burger_agent = Agent(
             role="Burger Seller Agent",
