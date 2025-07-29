@@ -56,7 +56,6 @@ def main(host, port):
             description="Helps with creating burger orders",
             url=agent_host_url,
             version="1.0.0",
-            security_schemes={"http_basic": HTTPAuthSecurityScheme(scheme="Basic")},
             defaultInputModes=BurgerSellerAgent.SUPPORTED_CONTENT_TYPES,
             defaultOutputModes=BurgerSellerAgent.SUPPORTED_CONTENT_TYPES,
             capabilities=capabilities,
