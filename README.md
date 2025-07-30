@@ -74,7 +74,8 @@ Finally, we can run our A2A client capabilities owned by purchasing concierge ag
 
 1. Go back to demo root directory ( where `purchasing_concierge` directory is located )
 2. Copy the `purchasing_concierge/.env.example` to `purchasing_concierge/.env`.
-3. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID.
+3. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID. 
+   And fill in the `PIZZA_SELLER_AGENT_URL` and `BURGER_SELLER_AGENT_URL` with the URL of the remote seller agents.
 
     ```
     PIZZA_SELLER_AGENT_URL=http://localhost:10000
@@ -84,7 +85,7 @@ Finally, we can run our A2A client capabilities owned by purchasing concierge ag
     GOOGLE_CLOUD_LOCATION=us-central1
     ```
 
-3. Run the purchasing concierge agent with the adk web dev UI
+4. Run the purchasing concierge agent with the adk web dev UI
 
     ```bash
     uv sync --frozen
@@ -125,20 +126,28 @@ gcloud run deploy pizza-agent \
 
 ### Deploy Purchasing Concierge Agent - Agent Engine
 
-Create the staging bucket first
+1. Create the staging bucket first
 
-```bash
-gcloud storage buckets create gs://purchasing-concierge-{your-project-id} --location=us-central1
-```
+    ```bash
+    gcloud storage buckets create gs://purchasing-concierge-{your-project-id} --location=us-central1
+    ```
 
-Then run this command
+2. Copy the `.env.example` to `.env`.
+3. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID.
 
-```bash
-uv run adk deploy agent_engine \
-    --project {your-project-id} \
-    --region us-central1 \
-    --staging-bucket gs://purchasing-concierge-{your-project-id} \
-    --env-file purchasing_concierge/.env \
-    purchasing_concierge
-```
+    ```
+    GCLOUD_LOCATION=us-central1
+    GCLOUD_PROJECT_ID={your-project-id}
+    GOOGLE_GENAI_USE_VERTEXAI=TRUE
+    STAGING_BUCKET=gs://purchasing-concierge-{your-project-id}
+    PIZZA_SELLER_AGENT_URL={your-pizza-agent-url}
+    BURGER_SELLER_AGENT_URL={your-burger-agent-url}
+    ```
+
+4. Deploy the purchasing concierge agent to agent engine
+
+    ```bash
+    uv sync --frozen
+    uv run deploy_to_agent_engine.py
+    ```
 
