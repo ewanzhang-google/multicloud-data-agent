@@ -17,9 +17,6 @@ limitations under the License.
 import gradio as gr
 
 from typing import List, Dict, Any
-from purchasing_concierge.agent import root_agent as purchasing_agent
-from google.adk.sessions import InMemorySessionService
-from google.adk.runners import Runner
 from google.adk.events import Event
 from typing import AsyncIterator
 from google.genai import types
@@ -28,12 +25,6 @@ from pprint import pformat
 APP_NAME = "purchasing_concierge_app"
 USER_ID = "default_user"
 SESSION_ID = "default_session"
-SESSION_SERVICE = InMemorySessionService()
-PURCHASING_AGENT_RUNNER = Runner(
-    agent=purchasing_agent,  # The agent we want to run
-    app_name=APP_NAME,  # Associates runs with our app
-    session_service=SESSION_SERVICE,  # Uses our session manager
-)
 
 
 async def get_response_from_agent(
@@ -52,7 +43,7 @@ async def get_response_from_agent(
     # try:
 
     if not await SESSION_SERVICE.get_session(
-        app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID   
+        app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
     ):
         await SESSION_SERVICE.create_session(
             app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID

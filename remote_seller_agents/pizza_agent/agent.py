@@ -18,7 +18,6 @@ from langchain_google_vertexai import ChatVertexAI
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
-from typing import Literal
 from pydantic import BaseModel
 import uuid
 from dotenv import load_dotenv
@@ -27,6 +26,7 @@ import os
 load_dotenv()
 
 memory = MemorySaver()
+
 
 class OrderItem(BaseModel):
     name: str

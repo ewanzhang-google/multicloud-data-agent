@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from a2a.types import AgentCapabilities, AgentSkill, AgentCard, HTTPAuthSecurityScheme
+from a2a.types import AgentCapabilities, AgentSkill, AgentCard
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.apps import A2AStarletteApplication
 from a2a.server.tasks import InMemoryTaskStore
