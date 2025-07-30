@@ -123,3 +123,22 @@ gcloud run deploy pizza-agent \
     --update-env-vars GCLOUD_PROJECT_ID={your-project-id}
 ```
 
+### Deploy Purchasing Concierge Agent - Agent Engine
+
+Create the staging bucket first
+
+```bash
+gcloud storage buckets create gs://purchasing-concierge-{your-project-id} --location=us-central1
+```
+
+Then run this command
+
+```bash
+uv run adk deploy agent_engine \
+    --project {your-project-id} \
+    --region us-central1 \
+    --staging-bucket gs://purchasing-concierge-{your-project-id} \
+    --env-file purchasing_concierge/.env \
+    purchasing_concierge
+```
+
