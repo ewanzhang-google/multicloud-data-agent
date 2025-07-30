@@ -53,23 +53,26 @@ class PurchasingAgent:
     ):
         self.task_callback = task_callback
         self.remote_agent_connections: dict[str, RemoteAgentConnections] = {}
+        self.remote_agent_addresses = remote_agent_addresses
         self.cards: dict[str, AgentCard] = {}
-        httpx_client = httpx.AsyncClient(timeout=httpx.Timeout(timeout=30))
-        for address in remote_agent_addresses:
-            card_resolver = A2ACardResolver(base_url=address, httpx_client=httpx_client)
-            try:
-                card = asyncio.run(card_resolver.get_agent_card())
-                remote_connection = RemoteAgentConnections(
-                    agent_card=card, agent_url=address
-                )
-                self.remote_agent_connections[card.name] = remote_connection
-                self.cards[card.name] = card
-            except httpx.ConnectError:
-                print(f"ERROR: Failed to get agent card from : {address}")
-        agent_info = []
-        for ra in self.list_remote_agents():
-            agent_info.append(json.dumps(ra))
-        self.agents = "\n".join(agent_info)
+        self.agents = ""
+        self.a2a_client_init_status = False
+        # httpx_client = httpx.AsyncClient(timeout=httpx.Timeout(timeout=30))
+        # for address in remote_agent_addresses:
+        #     card_resolver = A2ACardResolver(base_url=address, httpx_client=httpx_client)
+        #     try:
+        #         card = asyncio.run(card_resolver.get_agent_card())
+        #         remote_connection = RemoteAgentConnections(
+        #             agent_card=card, agent_url=address
+        #         )
+        #         self.remote_agent_connections[card.name] = remote_connection
+        #         self.cards[card.name] = card
+        #     except httpx.ConnectError:
+        #         print(f"ERROR: Failed to get agent card from : {address}")
+        # agent_info = []
+        # for ra in self.list_remote_agents():
+        #     agent_info.append(json.dumps(ra))
+        # self.agents = "\n".join(agent_info)
 
     def create_agent(self) -> Agent:
         return Agent(
@@ -77,6 +80,7 @@ class PurchasingAgent:
             name="purchasing_agent",
             instruction=self.root_instruction,
             before_model_callback=self.before_model_callback,
+            before_agent_callback=self.before_agent_callback,
             description=(
                 "This purchasing agent orchestrates the decomposition of the user purchase request into"
                 " tasks that can be performed by the seller agents."
@@ -125,7 +129,27 @@ Current active seller agent: {current_agent["active_agent"]}
             return {"active_agent": f"{state['active_agent']}"}
         return {"active_agent": "None"}
 
-    def before_model_callback(self, callback_context: CallbackContext, llm_request):
+    async def before_agent_callback(self, callback_context: CallbackContext):
+        if not self.a2a_client_init_status:
+            httpx_client = httpx.AsyncClient(timeout=httpx.Timeout(timeout=30))
+            for address in self.remote_agent_addresses:
+                card_resolver = A2ACardResolver(base_url=address, httpx_client=httpx_client)
+                try:
+                    card = await card_resolver.get_agent_card()
+                    remote_connection = RemoteAgentConnections(
+                        agent_card=card, agent_url=address
+                    )
+                    self.remote_agent_connections[card.name] = remote_connection
+                    self.cards[card.name] = card
+                except httpx.ConnectError:
+                    print(f"ERROR: Failed to get agent card from : {address}")
+            agent_info = []
+            for ra in self.list_remote_agents():
+                agent_info.append(json.dumps(ra))
+            self.agents = "\n".join(agent_info)
+            
+
+    async def before_model_callback(self, callback_context: CallbackContext, llm_request):        
         state = callback_context.state
         if "session_active" not in state or not state["session_active"]:
             if "session_id" not in state:
@@ -185,15 +209,9 @@ Current active seller agent: {current_agent["active_agent"]}
                     {'type': 'text', 'text': task}
                 ],  # Use the 'task' argument here
                 'messageId': message_id,
-                'sessionId': session_id,
+                'contextId': session_id,
             },
         }
-
-        if task_id:
-            payload['message']['taskId'] = task_id
-
-        if context_id:
-            payload['message']['contextId'] = context_id
 
         message_request = SendMessageRequest(
             id=message_id, params=MessageSendParams.model_validate(payload)
