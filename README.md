@@ -37,10 +37,11 @@ First, we need to run the remote seller agents. We have two remote seller agents
 1. Copy the `remote_seller_agents/burger_agent/.env.example` to `remote_seller_agents/burger_agent/.env`.
 2. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID.
 
-    ```
+    ```bash
     GCLOUD_LOCATION=us-central1
     GCLOUD_PROJECT_ID={your-project-id}
     ```
+
 3. Run the burger agent.
 
     ```bash
@@ -48,6 +49,7 @@ First, we need to run the remote seller agents. We have two remote seller agents
     uv sync --frozen
     uv run .
     ```
+
 4. It will run on `http://localhost:10001`
 
 ### Run the Pizza Agent - Locally
@@ -55,10 +57,11 @@ First, we need to run the remote seller agents. We have two remote seller agents
 1. Copy the `remote_seller_agents/pizza_agent/.env.example` to `remote_seller_agents/pizza_agent/.env`.
 2. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID.
 
-    ```
+    ```bash
     GCLOUD_LOCATION=us-central1
     GCLOUD_PROJECT_ID={your-project-id}
     ```
+
 3. Run the pizza agent.
 
     ```bash
@@ -66,6 +69,7 @@ First, we need to run the remote seller agents. We have two remote seller agents
     uv sync --frozen
     uv run .
     ```
+
 4. It will run on `http://localhost:10000`
 
 ### Run the Purchasing Concierge Agent - Locally
@@ -77,7 +81,7 @@ Finally, we can run our A2A client capabilities owned by purchasing concierge ag
 3. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID. 
    And fill in the `PIZZA_SELLER_AGENT_URL` and `BURGER_SELLER_AGENT_URL` with the URL of the remote seller agents.
 
-    ```
+    ```bash
     PIZZA_SELLER_AGENT_URL=http://localhost:10000
     BURGER_SELLER_AGENT_URL=http://localhost:10001
     GOOGLE_GENAI_USE_VERTEXAI=TRUE
@@ -135,7 +139,7 @@ gcloud run deploy pizza-agent \
 2. Copy the `.env.example` to `.env`.
 3. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID.
 
-    ```
+    ```bash
     GCLOUD_LOCATION=us-central1
     GCLOUD_PROJECT_ID={your-project-id}
     GOOGLE_GENAI_USE_VERTEXAI=TRUE
@@ -151,6 +155,13 @@ gcloud run deploy pizza-agent \
     uv run deploy_to_agent_engine.py
     ```
 
-### Deploy the Chat UI - Cloud Run
+### Run the Chat Interface to Connect to Agent Engine
 
-TODO
+1. Update the `.env` file with the `AGENT_ENGINE_RESOURCE_NAME` which obtained from the previous step.
+
+2. Run the purchasing concierge agent with the adk web dev UI
+
+```bash
+uv sync --frozen
+uv run purchasing_concierge_ui.py
+```
