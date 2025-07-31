@@ -21,11 +21,16 @@ from google.adk.events import Event
 from typing import AsyncIterator
 from google.genai import types
 from pprint import pformat
+from vertexai import agent_engines
+import os
+from dotenv import load_dotenv
 
-APP_NAME = "purchasing_concierge_app"
+load_dotenv()
+
 USER_ID = "default_user"
-SESSION_ID = "default_session"
 
+REMOTE_APP = agent_engines.get(os.getenv("AGENT_ENGINE_RESOURCE_NAME"))
+SESSION_ID = REMOTE_APP.create_session(user_id=USER_ID)["id"]
 
 async def get_response_from_agent(
     message: str,
@@ -42,34 +47,29 @@ async def get_response_from_agent(
     """
     # try:
 
-    if not await SESSION_SERVICE.get_session(
-        app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
-    ):
-        await SESSION_SERVICE.create_session(
-            app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
-        )
-
-    events_iterator: AsyncIterator[Event] = PURCHASING_AGENT_RUNNER.run_async(
-        user_id=USER_ID,
-        session_id=SESSION_ID,
-        new_message=types.Content(role="user", parts=[types.Part(text=message)]),
-    )
+    default_response = "No response from agent"
 
     responses = []
-    async for event in events_iterator:  # event has type Event
-        if event.content.parts:
-            for part in event.content.parts:
-                if part.function_call:
-                    formatted_call = f"```python\n{pformat(part.function_call.model_dump(), indent=2, width=80)}\n```"
+
+    for event in REMOTE_APP.stream_query(
+       user_id=USER_ID,
+       session_id=SESSION_ID,
+       message=message,
+    ):
+        parts = event.get("content", {}).get("parts", [])
+        if parts:
+            for part in parts:
+                if part.get("function_call"):
+                    formatted_call = f"```python\n{pformat(part.get("function_call"), indent=2, width=80)}\n```"
                     responses.append(
                         gr.ChatMessage(
                             role="assistant",
-                            content=f"{part.function_call.name}:\n{formatted_call}",
+                            content=f"{part.get("function_call").get("name")}:\n{formatted_call}",
                             metadata={"title": "🛠️ Tool Call"},
                         )
                     )
-                elif part.function_response:
-                    formatted_response = f"```python\n{pformat(part.function_response.model_dump(), indent=2, width=80)}\n```"
+                elif part.get("function_response"):
+                    formatted_response = f"```python\n{pformat(part.get("function_response"), indent=2, width=80)}\n```"
 
                     responses.append(
                         gr.ChatMessage(
@@ -78,32 +78,27 @@ async def get_response_from_agent(
                             metadata={"title": "⚡ Tool Response"},
                         )
                     )
+                elif part.get("text"):
+                    responses.append(
+                        gr.ChatMessage(
+                            role="assistant",
+                            content=part.get("text"),
+                        )
+                    )
+                else:
+                    formatted_unknown_parts = f"Unknown agent response part:\n\n```python\n{pformat(part, indent=2, width=80)}\n```"
 
-        # Key Concept: is_final_response() marks the concluding message for the turn
-        if event.is_final_response():
-            if event.content and event.content.parts:
-                # Extract text from the first part
-                final_response_text = event.content.parts[0].text
-            elif event.actions and event.actions.escalate:
-                # Handle potential errors/escalations
-                final_response_text = (
-                    f"Agent escalated: {event.error_message or 'No specific message.'}"
-                )
-            responses.append(
-                gr.ChatMessage(role="assistant", content=final_response_text)
-            )
-            yield responses
-            break  # Stop processing events once the final response is found
+                    responses.append(
+                        gr.ChatMessage(
+                            role="assistant",
+                            content=formatted_unknown_parts,
+                        )
+                    )
 
-        yield responses
-    # except Exception as e:
-    #     yield [
-    #         gr.ChatMessage(
-    #             role="assistant",
-    #             content=f"Error communicating with agent: {str(e)}",
-    #         )
-    #     ]
+    if not responses:
+        yield default_response
 
+    yield responses
 
 if __name__ == "__main__":
     demo = gr.ChatInterface(
