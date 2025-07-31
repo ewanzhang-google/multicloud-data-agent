@@ -17,9 +17,6 @@ limitations under the License.
 import gradio as gr
 
 from typing import List, Dict, Any
-from google.adk.events import Event
-from typing import AsyncIterator
-from google.genai import types
 from pprint import pformat
 from vertexai import agent_engines
 import os
@@ -31,6 +28,7 @@ USER_ID = "default_user"
 
 REMOTE_APP = agent_engines.get(os.getenv("AGENT_ENGINE_RESOURCE_NAME"))
 SESSION_ID = REMOTE_APP.create_session(user_id=USER_ID)["id"]
+
 
 async def get_response_from_agent(
     message: str,
@@ -52,24 +50,24 @@ async def get_response_from_agent(
     responses = []
 
     for event in REMOTE_APP.stream_query(
-       user_id=USER_ID,
-       session_id=SESSION_ID,
-       message=message,
+        user_id=USER_ID,
+        session_id=SESSION_ID,
+        message=message,
     ):
         parts = event.get("content", {}).get("parts", [])
         if parts:
             for part in parts:
                 if part.get("function_call"):
-                    formatted_call = f"```python\n{pformat(part.get("function_call"), indent=2, width=80)}\n```"
+                    formatted_call = f"```python\n{pformat(part.get('function_call'), indent=2, width=80)}\n```"
                     responses.append(
                         gr.ChatMessage(
                             role="assistant",
-                            content=f"{part.get("function_call").get("name")}:\n{formatted_call}",
+                            content=f"{part.get('function_call').get('name')}:\n{formatted_call}",
                             metadata={"title": "🛠️ Tool Call"},
                         )
                     )
                 elif part.get("function_response"):
-                    formatted_response = f"```python\n{pformat(part.get("function_response"), indent=2, width=80)}\n```"
+                    formatted_response = f"```python\n{pformat(part.get('function_response'), indent=2, width=80)}\n```"
 
                     responses.append(
                         gr.ChatMessage(
@@ -99,6 +97,7 @@ async def get_response_from_agent(
         yield default_response
 
     yield responses
+
 
 if __name__ == "__main__":
     demo = gr.ChatInterface(
