@@ -159,7 +159,7 @@ gcloud run deploy pizza-agent \
 
 1. Update the `.env` file with the `AGENT_ENGINE_RESOURCE_NAME` which obtained from the previous step.
 
-2. Run the purchasing concierge agent with the adk web dev UI
+2. Run the Gradio app
 
 ```bash
 uv sync --frozen
