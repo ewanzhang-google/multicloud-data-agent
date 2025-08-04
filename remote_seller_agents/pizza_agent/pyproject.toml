@@ -15,6 +15,7 @@ dependencies = [
     "pyjwt>=2.10.1",
     "sse-starlette>=2.3.3",
     "uvicorn>=0.34.2",
+    "a2a-sdk>=0.2.16",
 ]
 
 [tool.hatch.build.targets.wheel]

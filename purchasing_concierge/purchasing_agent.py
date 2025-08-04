@@ -19,21 +19,21 @@ import uuid
 from typing import List
 import httpx
 
-
 from google.adk import Agent
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.tools.tool_context import ToolContext
 from .remote_agent_connection import RemoteAgentConnections, TaskUpdateCallback
-from a2a_client.card_resolver import A2ACardResolver
-from a2a_types import (
+
+from a2a.client import A2ACardResolver
+from a2a.types import (
     AgentCard,
-    Message,
-    TaskState,
-    Task,
-    TaskSendParams,
-    TextPart,
+    MessageSendParams,
     Part,
+    SendMessageRequest,
+    SendMessageResponse,
+    SendMessageSuccessResponse,
+    Task,
 )
 
 
@@ -47,35 +47,20 @@ class PurchasingAgent:
     def __init__(
         self,
         remote_agent_addresses: List[str],
-        task_callback: TaskUpdateCallback | None = None,
     ):
-        self.task_callback = task_callback
         self.remote_agent_connections: dict[str, RemoteAgentConnections] = {}
+        self.remote_agent_addresses = remote_agent_addresses
         self.cards: dict[str, AgentCard] = {}
-        for address in remote_agent_addresses:
-            card_resolver = A2ACardResolver(address)
-            try:
-                card = card_resolver.get_agent_card()
-                # The URL accessed here should be the same as the one provided in the agent card
-                # However, in this demo we are using the URL provided in the key arguments
-                remote_connection = RemoteAgentConnections(
-                    agent_card=card, agent_url=address
-                )
-                self.remote_agent_connections[card.name] = remote_connection
-                self.cards[card.name] = card
-            except httpx.ConnectError:
-                print(f"ERROR: Failed to get agent card from : {address}")
-        agent_info = []
-        for ra in self.list_remote_agents():
-            agent_info.append(json.dumps(ra))
-        self.agents = "\n".join(agent_info)
+        self.agents = ""
+        self.a2a_client_init_status = False
 
     def create_agent(self) -> Agent:
         return Agent(
-            model="gemini-2.0-flash-001",
+            model="gemini-2.5-flash-lite",
             name="purchasing_agent",
             instruction=self.root_instruction,
             before_model_callback=self.before_model_callback,
+            before_agent_callback=self.before_agent_callback,
             description=(
                 "This purchasing agent orchestrates the decomposition of the user purchase request into"
                 " tasks that can be performed by the seller agents."
@@ -97,7 +82,7 @@ Execution:
 - Never ask user permission when you want to connect with remote agents. If you need to make connection with multiple remote agents, directly
     connect with them without asking user permission or asking user preference
 - Always show the detailed response information from the seller agent and propagate it properly to the user. 
-- If the remote seller is asking for confirmation, rely the confirmation question to the user if the user haven't do so. 
+- If the remote seller is asking for confirmation, rely the confirmation question with proper and necessary information to the user if the user haven't do so. 
 - If the user already confirmed the related order in the past conversation history, you can confirm on behalf of the user
 - Do not give irrelevant context to remote seller agent. For example, ordered pizza item is not relevant for the burger seller agent
 - Never ask order confirmation to the remote seller agent 
@@ -124,7 +109,31 @@ Current active seller agent: {current_agent["active_agent"]}
             return {"active_agent": f"{state['active_agent']}"}
         return {"active_agent": "None"}
 
-    def before_model_callback(self, callback_context: CallbackContext, llm_request):
+    async def before_agent_callback(self, callback_context: CallbackContext):
+        if not self.a2a_client_init_status:
+            httpx_client = httpx.AsyncClient(timeout=httpx.Timeout(timeout=30))
+            for address in self.remote_agent_addresses:
+                card_resolver = A2ACardResolver(
+                    base_url=address, httpx_client=httpx_client
+                )
+                try:
+                    card = await card_resolver.get_agent_card()
+                    remote_connection = RemoteAgentConnections(
+                        agent_card=card, agent_url=card.url
+                    )
+                    self.remote_agent_connections[card.name] = remote_connection
+                    self.cards[card.name] = card
+                except httpx.ConnectError:
+                    print(f"ERROR: Failed to get agent card from : {address}")
+            agent_info = []
+            for ra in self.list_remote_agents():
+                agent_info.append(json.dumps(ra))
+            self.agents = "\n".join(agent_info)
+            self.a2a_client_init_status = True
+
+    async def before_model_callback(
+        self, callback_context: CallbackContext, llm_request
+    ):
         state = callback_context.state
         if "session_active" not in state or not state["session_active"]:
             if "session_id" not in state:
@@ -166,56 +175,48 @@ Current active seller agent: {current_agent["active_agent"]}
         client = self.remote_agent_connections[agent_name]
         if not client:
             raise ValueError(f"Client not available for {agent_name}")
-        if "task_id" in state:
-            taskId = state["task_id"]
-        else:
-            taskId = str(uuid.uuid4())
-        sessionId = state["session_id"]
+        session_id = state["session_id"]
         task: Task
-        messageId = ""
+        message_id = ""
         metadata = {}
         if "input_message_metadata" in state:
             metadata.update(**state["input_message_metadata"])
             if "message_id" in state["input_message_metadata"]:
-                messageId = state["input_message_metadata"]["message_id"]
-        if not messageId:
-            messageId = str(uuid.uuid4())
-        metadata.update(**{"conversation_id": sessionId, "message_id": messageId})
-        request: TaskSendParams = TaskSendParams(
-            id=taskId,
-            sessionId=sessionId,
-            message=Message(
-                role="user",
-                parts=[TextPart(text=task)],
-                metadata=metadata,
-            ),
-            acceptedOutputModes=["text", "text/plain"],
-            # pushNotification=None,
-            metadata={"conversation_id": sessionId},
-        )
-        task = await client.send_task(request, self.task_callback)
-        # Assume completion unless a state returns that isn't complete
-        state["session_active"] = task.status.state not in [
-            TaskState.COMPLETED,
-            TaskState.CANCELED,
-            TaskState.FAILED,
-            TaskState.UNKNOWN,
-        ]
-        if task.status.state == TaskState.INPUT_REQUIRED:
-            # Force user input back
-            tool_context.actions.escalate = True
-        elif task.status.state == TaskState.COMPLETED:
-            # Reset active agent is task is completed
-            state["active_agent"] = "None"
+                message_id = state["input_message_metadata"]["message_id"]
+        if not message_id:
+            message_id = str(uuid.uuid4())
 
-        response = []
-        if task.status.message:
-            # Assume the information is in the task message.
-            response.extend(convert_parts(task.status.message.parts, tool_context))
-        if task.artifacts:
-            for artifact in task.artifacts:
-                response.extend(convert_parts(artifact.parts, tool_context))
-        return response
+        payload = {
+            "message": {
+                "role": "user",
+                "parts": [
+                    {"type": "text", "text": task}
+                ],  # Use the 'task' argument here
+                "messageId": message_id,
+                "contextId": session_id,
+            },
+        }
+
+        message_request = SendMessageRequest(
+            id=message_id, params=MessageSendParams.model_validate(payload)
+        )
+        send_response: SendMessageResponse = await client.send_message(
+            message_request=message_request
+        )
+        print(
+            "send_response",
+            send_response.model_dump_json(exclude_none=True, indent=2),
+        )
+
+        if not isinstance(send_response.root, SendMessageSuccessResponse):
+            print("received non-success response. Aborting get task ")
+            return None
+
+        if not isinstance(send_response.root.result, Task):
+            print("received non-task response. Aborting get task ")
+            return None
+
+        return send_response.root.result
 
 
 def convert_parts(parts: list[Part], tool_context: ToolContext):

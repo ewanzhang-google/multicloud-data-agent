@@ -14,15 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from a2a_server.server import A2AServer
-from a2a_types import AgentCard, AgentCapabilities, AgentSkill, AgentAuthentication
-from a2a_server.push_notification_auth import PushNotificationSenderAuth
-from task_manager import AgentTaskManager
+from a2a.types import AgentCapabilities, AgentSkill, AgentCard
+from a2a.server.request_handlers import DefaultRequestHandler
+from a2a.server.apps import A2AStarletteApplication
+from a2a.server.tasks import InMemoryTaskStore
 from agent import BurgerSellerAgent
-import click
-import logging
+from agent_executor import BurgerSellerAgentExecutor
+import uvicorn
 from dotenv import load_dotenv
+import logging
 import os
+import click
 
 load_dotenv()
 
@@ -34,9 +36,9 @@ logger = logging.getLogger(__name__)
 @click.option("--host", "host", default="0.0.0.0")
 @click.option("--port", "port", default=10001)
 def main(host, port):
-    """Starts the Burger Seller Agent server."""
+    """Entry point for the A2A + CrewAI Burger Seller Agent."""
     try:
-        capabilities = AgentCapabilities(pushNotifications=True)
+        capabilities = AgentCapabilities(streaming=True)
         skill = AgentSkill(
             id="create_burger_order",
             name="Burger Order Creation Tool",
@@ -44,42 +46,33 @@ def main(host, port):
             tags=["burger order creation"],
             examples=["I want to order 2 classic cheeseburgers"],
         )
+        agent_host_url = (
+            os.getenv("HOST_OVERRIDE")
+            if os.getenv("HOST_OVERRIDE")
+            else f"http://{host}:{port}/"
+        )
         agent_card = AgentCard(
             name="burger_seller_agent",
             description="Helps with creating burger orders",
-            # The URL provided here is for the sake of demo,
-            # in production you should use a proper domain name
-            url=f"http://{host}:{port}/",
+            url=agent_host_url,
             version="1.0.0",
-            authentication=AgentAuthentication(schemes=["Basic"]),
             defaultInputModes=BurgerSellerAgent.SUPPORTED_CONTENT_TYPES,
             defaultOutputModes=BurgerSellerAgent.SUPPORTED_CONTENT_TYPES,
             capabilities=capabilities,
             skills=[skill],
         )
 
-        notification_sender_auth = PushNotificationSenderAuth()
-        notification_sender_auth.generate_jwk()
-        server = A2AServer(
-            agent_card=agent_card,
-            task_manager=AgentTaskManager(
-                agent=BurgerSellerAgent(),
-                notification_sender_auth=notification_sender_auth,
-            ),
-            host=host,
-            port=port,
-            auth_username=os.environ.get("AUTH_USERNAME"),
-            auth_password=os.environ.get("AUTH_PASSWORD"),
+        request_handler = DefaultRequestHandler(
+            agent_executor=BurgerSellerAgentExecutor(),
+            task_store=InMemoryTaskStore(),
+        )
+        server = A2AStarletteApplication(
+            agent_card=agent_card, http_handler=request_handler
         )
 
-        server.app.add_route(
-            "/.well-known/jwks.json",
-            notification_sender_auth.handle_jwks_endpoint,
-            methods=["GET"],
-        )
+        uvicorn.run(server.build(), host=host, port=port)
 
         logger.info(f"Starting server on {host}:{port}")
-        server.start()
     except Exception as e:
         logger.error(f"An error occurred during server startup: {e}")
         exit(1)

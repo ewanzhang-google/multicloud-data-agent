@@ -18,7 +18,6 @@ from langchain_google_vertexai import ChatVertexAI
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
-from typing import Literal
 from pydantic import BaseModel
 import uuid
 from dotenv import load_dotenv
@@ -27,13 +26,6 @@ import os
 load_dotenv()
 
 memory = MemorySaver()
-
-
-class ResponseFormat(BaseModel):
-    """Respond to the user in this format."""
-
-    status: Literal["input_required", "completed", "error"] = "input_required"
-    message: str
 
 
 class OrderItem(BaseModel):
@@ -96,18 +88,15 @@ Provided below is the available pizza menu and it's related price:
     2. Use `create_pizza_order` tool to create the order
     3. Finally, always provide response to the user about the detailed ordered items, price breakdown and total, and order ID
 
-- Set response status to input_required if asking for user order confirmation.
-- Set response status to error if there is an error while processing the request.
-- Set response status to completed if the request is complete.
 - DO NOT make up menu or price, Always rely on the provided menu given to you as context.
 """
     SUPPORTED_CONTENT_TYPES = ["text", "text/plain"]
 
     def __init__(self):
         self.model = ChatVertexAI(
-            model="gemini-2.0-flash",
-            location=os.getenv("GCLOUD_LOCATION"),
-            project=os.getenv("GCLOUD_PROJECT_ID"),
+            model="gemini-2.5-flash-lite",
+            location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+            project=os.getenv("GOOGLE_CLOUD_PROJECT"),
         )
         self.tools = [create_pizza_order]
         self.graph = create_react_agent(
@@ -115,7 +104,6 @@ Provided below is the available pizza menu and it's related price:
             tools=self.tools,
             checkpointer=memory,
             prompt=self.SYSTEM_INSTRUCTION,
-            response_format=ResponseFormat,
         )
 
     def invoke(self, query, sessionId) -> str:
@@ -125,29 +113,4 @@ Provided below is the available pizza menu and it's related price:
 
     def get_agent_response(self, config):
         current_state = self.graph.get_state(config)
-        structured_response = current_state.values.get("structured_response")
-        if structured_response and isinstance(structured_response, ResponseFormat):
-            if structured_response.status == "input_required":
-                return {
-                    "is_task_complete": False,
-                    "require_user_input": True,
-                    "content": structured_response.message,
-                }
-            elif structured_response.status == "error":
-                return {
-                    "is_task_complete": False,
-                    "require_user_input": True,
-                    "content": structured_response.message,
-                }
-            elif structured_response.status == "completed":
-                return {
-                    "is_task_complete": True,
-                    "require_user_input": False,
-                    "content": structured_response.message,
-                }
-
-        return {
-            "is_task_complete": False,
-            "require_user_input": True,
-            "content": "We are unable to process your request at the moment. Please try again.",
-        }
+        return current_state.values["messages"][-1].content
