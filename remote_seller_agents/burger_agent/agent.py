@@ -24,8 +24,8 @@ import os
 
 load_dotenv()
 
-litellm.vertex_project = os.getenv("GCLOUD_PROJECT_ID")
-litellm.vertex_location = os.getenv("GCLOUD_LOCATION")
+litellm.vertex_project = os.getenv("GOOGLE_CLOUD_PROJECT")
+litellm.vertex_location = os.getenv("GOOGLE_CLOUD_LOCATION")
 
 
 class OrderItem(BaseModel):

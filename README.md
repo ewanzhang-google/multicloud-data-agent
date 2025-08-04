@@ -109,8 +109,8 @@ gcloud run deploy burger-agent \
     --allow-unauthenticated \
     --min 1 \
     --region us-central1 \
-    --update-env-vars GCLOUD_LOCATION=us-central1 \
-    --update-env-vars GCLOUD_PROJECT_ID={your-project-id}
+    --update-env-vars GOOGLE_CLOUD_LOCATION=us-central1 \
+    --update-env-vars GOOGLE_CLOUD_PROJECT={your-project-id}
 ```
 
 ### Deploy the Pizza Agent - Cloud Run
@@ -124,8 +124,8 @@ gcloud run deploy pizza-agent \
     --allow-unauthenticated \
     --min 1 \
     --region us-central1 \
-    --update-env-vars GCLOUD_LOCATION=us-central1 \
-    --update-env-vars GCLOUD_PROJECT_ID={your-project-id}
+    --update-env-vars GOOGLE_CLOUD_PROJECT={your-project-id} \
+    --update-env-vars GOOGLE_CLOUD_LOCATION=us-central1
 ```
 
 ### Deploy Purchasing Concierge Agent - Agent Engine
@@ -137,12 +137,12 @@ gcloud run deploy pizza-agent \
     ```
 
 2. Copy the `.env.example` to `.env`.
-3. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID.
+3. Fill in the required environment variables in the `.env` file. Substitute `GOOGLE_CLOUD_PROJECT` with your Google Cloud Project ID.
 
     ```bash
-    GCLOUD_LOCATION=us-central1
-    GCLOUD_PROJECT_ID={your-project-id}
     GOOGLE_GENAI_USE_VERTEXAI=TRUE
+    GOOGLE_CLOUD_PROJECT={your-project-id}
+    GOOGLE_CLOUD_LOCATION=us-central1
     STAGING_BUCKET=gs://purchasing-concierge-{your-project-id}
     PIZZA_SELLER_AGENT_URL={your-pizza-agent-url}
     BURGER_SELLER_AGENT_URL={your-burger-agent-url}

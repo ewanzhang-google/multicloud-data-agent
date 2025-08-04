@@ -23,8 +23,8 @@ from purchasing_concierge.agent import root_agent
 
 load_dotenv()
 
-PROJECT_ID = os.getenv("GCLOUD_PROJECT_ID")
-LOCATION = os.getenv("GCLOUD_LOCATION")
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
+LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
 STAGING_BUCKET = os.getenv("STAGING_BUCKET")
 
 vertexai.init(

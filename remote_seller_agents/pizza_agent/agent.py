@@ -95,8 +95,8 @@ Provided below is the available pizza menu and it's related price:
     def __init__(self):
         self.model = ChatVertexAI(
             model="gemini-2.5-flash-lite",
-            location=os.getenv("GCLOUD_LOCATION"),
-            project=os.getenv("GCLOUD_PROJECT_ID"),
+            location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+            project=os.getenv("GOOGLE_CLOUD_PROJECT"),
         )
         self.tools = [create_pizza_order]
         self.graph = create_react_agent(
