@@ -35,11 +35,11 @@ First, we need to run the remote seller agents. We have two remote seller agents
 ### Run the Burger Agent - Locally
 
 1. Copy the `remote_seller_agents/burger_agent/.env.example` to `remote_seller_agents/burger_agent/.env`.
-2. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID.
+2. Fill in the required environment variables in the `.env` file. Substitute `GOOGLE_CLOUD_PROJECT` with your Google Cloud Project ID.
 
     ```bash
-    GCLOUD_LOCATION=us-central1
-    GCLOUD_PROJECT_ID={your-project-id}
+    GOOGLE_CLOUD_LOCATION=us-central1
+    GOOGLE_CLOUD_PROJECT={your-project-id}
     ```
 
 3. Run the burger agent.
@@ -55,11 +55,11 @@ First, we need to run the remote seller agents. We have two remote seller agents
 ### Run the Pizza Agent - Locally
 
 1. Copy the `remote_seller_agents/pizza_agent/.env.example` to `remote_seller_agents/pizza_agent/.env`.
-2. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID.
+2. Fill in the required environment variables in the `.env` file. Substitute `GOOGLE_CLOUD_PROJECT` with your Google Cloud Project ID.
 
     ```bash
-    GCLOUD_LOCATION=us-central1
-    GCLOUD_PROJECT_ID={your-project-id}
+    GOOGLE_CLOUD_LOCATION=us-central1
+    GOOGLE_CLOUD_PROJECT={your-project-id}
     ```
 
 3. Run the pizza agent.
@@ -78,7 +78,7 @@ Finally, we can run our A2A client capabilities owned by purchasing concierge ag
 
 1. Go back to demo root directory ( where `purchasing_concierge` directory is located )
 2. Copy the `purchasing_concierge/.env.example` to `purchasing_concierge/.env`.
-3. Fill in the required environment variables in the `.env` file. Substitute `GCLOUD_PROJECT_ID` with your Google Cloud Project ID. 
+3. Fill in the required environment variables in the `.env` file. Substitute `GOOGLE_CLOUD_PROJECT` with your Google Cloud Project ID.
    And fill in the `PIZZA_SELLER_AGENT_URL` and `BURGER_SELLER_AGENT_URL` with the URL of the remote seller agents.
 
     ```bash
