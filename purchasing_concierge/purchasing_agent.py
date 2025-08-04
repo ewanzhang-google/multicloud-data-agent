@@ -47,9 +47,7 @@ class PurchasingAgent:
     def __init__(
         self,
         remote_agent_addresses: List[str],
-        task_callback: TaskUpdateCallback | None = None,
     ):
-        self.task_callback = task_callback
         self.remote_agent_connections: dict[str, RemoteAgentConnections] = {}
         self.remote_agent_addresses = remote_agent_addresses
         self.cards: dict[str, AgentCard] = {}
