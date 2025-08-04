@@ -28,4 +28,4 @@ EXPOSE 8080
 
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["uv", "run", "purchasing_concierge_demo.py"]
+ENTRYPOINT ["uv", "run", "purchasing_concierge_ui.py"]
