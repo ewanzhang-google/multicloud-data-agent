@@ -129,6 +129,7 @@ Current active seller agent: {current_agent["active_agent"]}
             for ra in self.list_remote_agents():
                 agent_info.append(json.dumps(ra))
             self.agents = "\n".join(agent_info)
+            self.a2a_client_init_status = True
 
     async def before_model_callback(
         self, callback_context: CallbackContext, llm_request
