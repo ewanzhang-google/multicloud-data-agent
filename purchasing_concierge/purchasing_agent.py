@@ -119,7 +119,7 @@ Current active seller agent: {current_agent["active_agent"]}
                 try:
                     card = await card_resolver.get_agent_card()
                     remote_connection = RemoteAgentConnections(
-                        agent_card=card, agent_url=address
+                        agent_card=card, agent_url=card.url
                     )
                     self.remote_agent_connections[card.name] = remote_connection
                     self.cards[card.name] = card
