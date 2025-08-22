@@ -49,7 +49,7 @@ remote_app = agent_engines.create(
     ],
     env_vars={
         "GOOGLE_GENAI_USE_VERTEXAI": os.environ["GOOGLE_GENAI_USE_VERTEXAI"],
-        "FLIGHT_BOOKING_AGENT_URL": os.environ["BURGER_SELLER_AGENT_URL"],
+        "FLIGHT_BOOKING_AGENT_URL": os.environ["FLIGHT_BOOKING_AGENT_URL"],
     },
 )
 
