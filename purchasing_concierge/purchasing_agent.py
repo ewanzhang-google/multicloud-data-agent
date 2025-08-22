@@ -72,8 +72,8 @@ class PurchasingAgent:
 
     def root_instruction(self, context: ReadonlyContext) -> str:
         current_agent = self.check_active_agent(context)
-        return f"""You are an expert purchasing delegator that can delegate the user product inquiry and purchase request to the
-appropriate seller remote agents.
+        return f"""You are an expert airline service delegator that can delegate the user product inquiry and purchase request to the
+appropriate flight booking remote agents.
 
 Execution:
 - For actionable tasks, you can use `send_task` to assign tasks to remote agents to perform.
@@ -81,10 +81,10 @@ Execution:
     So improve the task description to include all the necessary information related to that agent
 - Never ask user permission when you want to connect with remote agents. If you need to make connection with multiple remote agents, directly
     connect with them without asking user permission or asking user preference
-- Always show the detailed response information from the seller agent and propagate it properly to the user. 
+- Always show the detailed response information from the flight booking agent and propagate it properly to the user. 
 - If the remote seller is asking for confirmation, rely the confirmation question with proper and necessary information to the user if the user haven't do so. 
 - If the user already confirmed the related order in the past conversation history, you can confirm on behalf of the user
-- Do not give irrelevant context to remote seller agent. For example, ordered pizza item is not relevant for the burger seller agent
+- Do not give irrelevant context to remote flight booking agent.
 - Never ask order confirmation to the remote seller agent 
 
 Please rely on tools to address the request, and don't make up the response. If you are not sure, please ask the user for more details.
