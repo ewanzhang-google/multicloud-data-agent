@@ -24,9 +24,6 @@ import os
 
 # --- Configuration ---
 load_dotenv()
-litellm.vertex_project = os.getenv("GOOGLE_CLOUD_PROJECT")
-litellm.vertex_location = os.getenv("GOOGLE_CLOUD_LOCATION")
-
 
 # --- Data Models for the Tool ---
 class OrderItem(BaseModel):
@@ -88,11 +85,10 @@ Provided below is the available burger menu and its related price:
             allow_delegation=False,
             tools=[create_burger_order],
             llm=model,
-            model_name="gemini/gemini-1.5-flash-latest"
+            model_name="gpt-4.1"
         )
-        print("Burger Seller Agent initialized.")
+        print("Burger Seller Agent initialized for Azure OpenAI.")
 
-    # ** CHANGE 1: Updated the method signature to accept session_id **
     def invoke(self, query: str, session_id: str) -> str:
         agent_task = Task(
             description=self.TaskInstruction,
@@ -106,7 +102,6 @@ Provided below is the available burger menu and its related price:
             process=Process.sequential,
         )
 
-        # ** CHANGE 2: Pass the session_id to the crew's kickoff method **
         inputs = {"user_prompt": query, "session_id": session_id}
         response = crew.kickoff(inputs=inputs)
         return response
