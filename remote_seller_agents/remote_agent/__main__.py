@@ -46,15 +46,19 @@ def main(host, port):
             tags=["burger order creation"],
             examples=["I want to order 2 classic cheeseburgers"],
         )
-        agent_host_url = (
-            os.getenv("HOST_OVERRIDE")
-            if os.getenv("HOST_OVERRIDE")
-            else f"http://{host}:{port}/"
-        )
+        
+        # --- CHANGE: Simplified and clarified how the public URL is determined ---
+        # When deploying to Azure, set the AGENT_BASE_URL environment variable 
+        # to the public URL of your Container App.
+        agent_base_url = os.getenv("AGENT_BASE_URL")
+        if not agent_base_url:
+            agent_base_url = f"http://{host}:{port}"
+            logger.warning(f"AGENT_BASE_URL not set, defaulting to local URL: {agent_base_url}")
+        
         agent_card = AgentCard(
             name="burger_seller_agent",
             description="Helps with creating burger orders",
-            url=agent_host_url,
+            url=agent_base_url, # Use the determined base URL here
             version="1.0.0",
             defaultInputModes=BurgerSellerAgent.SUPPORTED_CONTENT_TYPES,
             defaultOutputModes=BurgerSellerAgent.SUPPORTED_CONTENT_TYPES,
@@ -70,9 +74,9 @@ def main(host, port):
             agent_card=agent_card, http_handler=request_handler
         )
 
+        logger.info(f"Starting server on {host}:{port}, advertising public URL: {agent_base_url}")
         uvicorn.run(server.build(), host=host, port=port)
 
-        logger.info(f"Starting server on {host}:{port}")
     except Exception as e:
         logger.error(f"An error occurred during server startup: {e}")
         exit(1)
