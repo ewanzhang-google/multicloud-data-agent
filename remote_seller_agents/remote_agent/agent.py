@@ -1,7 +1,19 @@
 """
-Testing from Gemini 2.5
+Copyright 2025 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 """
-from fastapi import FastAPI, HTTPException
+
 from pydantic import BaseModel
 import uuid
 from crewai import Agent, Crew, Task, Process
@@ -11,12 +23,10 @@ import litellm
 import os
 
 # --- Configuration ---
-# Load environment variables for local development. In Azure, these will be set in the service configuration.
 load_dotenv()
+litellm.vertex_project = os.getenv("GOOGLE_CLOUD_PROJECT")
+litellm.vertex_location = os.getenv("GOOGLE_CLOUD_LOCATION")
 
-# LiteLLM will automatically pick up Azure credentials from these standard environment variables:
-# AZURE_API_BASE, AZURE_API_KEY, AZURE_API_VERSION
-# So, we don't need to set them in the code.
 
 # --- Data Models for the Tool ---
 class OrderItem(BaseModel):
@@ -28,6 +38,7 @@ class Order(BaseModel):
     order_id: str
     status: str
     order_items: list[OrderItem]
+
 
 # --- Agent Tool Definition ---
 @tool("create_order")
@@ -42,7 +53,8 @@ def create_burger_order(order_items: list[OrderItem]) -> str:
         print(f"Error creating order: {e}")
         return f"Error creating order: {e}"
 
-# --- The Agent Logic (encapsulated in a class) ---
+
+# --- The Agent Logic ---
 class BurgerSellerAgent:
     TaskInstruction = """
 # INSTRUCTIONS
@@ -50,6 +62,8 @@ You are a specialized assistant for a burger store. Your sole purpose is to answ
 
 # CONTEXT
 Received user query: {user_prompt}
+Session ID: {session_id}
+
 Provided below is the available burger menu and its related price:
 - Classic Cheeseburger: IDR 85K
 - Double Cheeseburger: IDR 110K
@@ -64,6 +78,7 @@ Provided below is the available burger menu and its related price:
 - Do not make up menu items or prices.
 """
     def __init__(self):
+        # Initialize the agent and model once to reuse them
         model = litellm.completion
         self.burger_agent = Agent(
             role="Burger Seller Agent",
@@ -73,12 +88,12 @@ Provided below is the available burger menu and its related price:
             allow_delegation=False,
             tools=[create_burger_order],
             llm=model,
-            # ** CHANGE HERE: Point to your Azure OpenAI model deployment **
-            model_name="azure/your-gpt-deployment-name" 
+            model_name="gemini/gemini-1.5-flash-latest"
         )
         print("Burger Seller Agent initialized.")
 
-    def invoke(self, query: str) -> str:
+    # ** CHANGE 1: Updated the method signature to accept session_id **
+    def invoke(self, query: str, session_id: str) -> str:
         agent_task = Task(
             description=self.TaskInstruction,
             agent=self.burger_agent,
@@ -90,34 +105,8 @@ Provided below is the available burger menu and its related price:
             verbose=True,
             process=Process.sequential,
         )
-        inputs = {"user_prompt": query}
+
+        # ** CHANGE 2: Pass the session_id to the crew's kickoff method **
+        inputs = {"user_prompt": query, "session_id": session_id}
         response = crew.kickoff(inputs=inputs)
         return response
-
-# --- FastAPI Web Application ---
-app = FastAPI(title="Burger Agent API")
-burger_agent_instance = BurgerSellerAgent()
-
-class InvokeRequest(BaseModel):
-    query: str
-
-class InvokeResponse(BaseModel):
-    reply: str
-
-@app.post("/invoke", response_model=InvokeResponse)
-async def handle_invoke(request: InvokeRequest):
-    """Receives a query and returns the agent's response."""
-    if not request.query:
-        raise HTTPException(status_code=400, detail="Query cannot be empty.")
-    try:
-        print(f"Invoking agent with query: '{request.query}'")
-        agent_reply = burger_agent_instance.invoke(query=request.query)
-        return InvokeResponse(reply=agent_reply)
-    except Exception as e:
-        print(f"An error occurred during agent invocation: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/health")
-async def health_check():
-    """A simple health check endpoint."""
-    return {"status": "ok"}
