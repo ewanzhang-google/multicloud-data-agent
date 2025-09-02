@@ -74,10 +74,7 @@ Provided below is the available burger menu and its related price:
   3. Finally, respond with the detailed ordered items, price breakdown, total, and the new order ID.
 - Do not make up menu items or prices.
 """
-    SUPPORTED_CONTENT_TYPES = [
-        "text/plain",
-        "application/json",
-    ]
+    SUPPORTED_CONTENT_TYPES = ["text", "text/plain"]
     
     def __init__(self):
         # Initialize the agent and model once to reuse them
