@@ -39,7 +39,7 @@ adk_app = reasoning_engines.AdkApp(
 
 remote_app = agent_engines.create(
     agent_engine=adk_app,
-    display_name="purchasing-concierge",
+    display_name="purchasing-concierge0",
     requirements=[
         "google-cloud-aiplatform[adk,agent_engines]",
         "a2a-sdk==0.2.16",
@@ -49,7 +49,7 @@ remote_app = agent_engines.create(
     ],
     env_vars={
         "GOOGLE_GENAI_USE_VERTEXAI": os.environ["GOOGLE_GENAI_USE_VERTEXAI"],
-        "FLIGHT_BOOKING_AGENT_URL": os.environ["FLIGHT_BOOKING_AGENT_URL"],
+        "REMOTE_AGENT_URL": os.environ["REMOTE_AGENT_URL"],
     },
 )
 
