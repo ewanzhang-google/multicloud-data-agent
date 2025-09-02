@@ -86,7 +86,6 @@ Provided below is the available burger menu and its related price:
             verbose=True,
             allow_delegation=False,
             tools=[create_burger_order],
-            llm=model,
             model_name="azure/gpt-4.1"
         )
         print("Burger Seller Agent initialized for Azure OpenAI.")
