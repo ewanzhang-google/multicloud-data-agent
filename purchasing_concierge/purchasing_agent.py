@@ -57,7 +57,7 @@ class PurchasingAgent:
     def create_agent(self) -> Agent:
         return Agent(
             model="gemini-2.5-flash-lite",
-            name="purchasing_agent",
+            name="purchasing_agent0",
             instruction=self.root_instruction,
             before_model_callback=self.before_model_callback,
             before_agent_callback=self.before_agent_callback,
