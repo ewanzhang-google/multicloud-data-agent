@@ -6,6 +6,10 @@ FROM python:3.12-slim
 # Install uv, our package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy the application code into the container
 ADD . /app
 WORKDIR /app
@@ -22,4 +26,4 @@ ENV PYTHONUNBUFFERED=1
 
 # Run the app using its proper entry point from __main__.py
 # We pass --port 8080 to match the EXPOSE instruction
-CMD ["python", "-m", "__main__", "--port", "8080"]
+ENTRYPOINT ["uv", "run", ".", "--host", "0.0.0.0", "--port", "8080"]
