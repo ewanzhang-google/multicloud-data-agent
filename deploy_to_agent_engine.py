@@ -39,7 +39,7 @@ adk_app = reasoning_engines.AdkApp(
 
 remote_app = agent_engines.create(
     agent_engine=adk_app,
-    display_name="purchasing-concierge0",
+    display_name="purchasing-concierge",
     requirements=[
         "google-cloud-aiplatform[adk,agent_engines]",
         "a2a-sdk==0.2.16",
