@@ -55,7 +55,8 @@ class PurchasingAgent:
         self.agents = ""
         self.a2a_client_init_status = False
         
-        credentials_config = BigQueryCredentialsConfig()
+        credentials, _ = google.auth.default()
+        credentials_config = BigQueryCredentialsConfig(credentials=credentials)
 
         self.bigquery_toolset = BigQueryToolset(
             credentials_config=credentials_config,
