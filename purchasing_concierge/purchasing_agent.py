@@ -54,6 +54,12 @@ class PurchasingAgent:
         self.cards: dict[str, AgentCard] = {}
         self.agents = ""
         self.a2a_client_init_status = False
+        
+        credentials_config = BigQueryCredentialsConfig()
+
+        self.bigquery_toolset = BigQueryToolset(
+            credentials_config=credentials_config,
+        )
 
     def create_agent(self) -> Agent:
         return Agent(
@@ -68,6 +74,7 @@ class PurchasingAgent:
             ),
             tools=[
                 self.send_task,
+                self.bigquery_toolset,
             ],
         )
 
