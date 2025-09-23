@@ -38,16 +38,11 @@ from a2a.types import (
     Task,
 )
 
-application_default_credentials, _ = google.auth.default()
-credentials_config = BigQueryCredentialsConfig(
-  credentials=application_default_credentials
-)
-
-tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
+credentials, _ = google.auth.default()
+credentials_config = BigQueryCredentialsConfig(credentials=credentials)
 
 bigquery_toolset = BigQueryToolset(
-  credentials_config=credentials_config, 
-  bigquery_tool_config=tool_config
+  credentials_config=credentials_config
 )
 
 class PurchasingAgent:
