@@ -20,6 +20,7 @@ from typing import List
 import httpx
 
 import google.auth
+from google.adk.tools.bigquery import BigQueryCredentialsConfig, BigQueryToolset
 from google.adk import Agent
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.agents.callback_context import CallbackContext
