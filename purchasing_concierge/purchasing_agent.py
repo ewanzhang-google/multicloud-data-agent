@@ -38,13 +38,6 @@ from a2a.types import (
     Task,
 )
 
-credentials, _ = google.auth.default()
-credentials_config = BigQueryCredentialsConfig(credentials=credentials)
-
-bigquery_toolset = BigQueryToolset(
-  credentials_config=credentials_config
-)
-
 class PurchasingAgent:
     """The purchasing agent.
 
@@ -74,7 +67,7 @@ class PurchasingAgent:
                 " tasks that can be performed by the seller agents."
             ),
             tools=[
-                bigquery_toolset, self.send_task,
+                self.send_task,
             ],
         )
 
