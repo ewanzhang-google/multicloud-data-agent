@@ -98,12 +98,6 @@ You are an expert **Product Seller Agent**. Your goal is to provide detailed inf
 Received user query: {user_prompt}
 Session ID: {session_id}
 
-Provided below is the available burger menu and its related price:
-- Classic Cheeseburger: IDR 85K
-- Double Cheeseburger: IDR 110K
-- Spicy Chicken Burger: IDR 80K
-- Spicy Cajun Burger: IDR 85K
-
 # RULES
 - **Primary Function:** Use the `get_product_details` tool to look up product information whenever the user asks about a product and provides a specific product ID (e.g., "What is the price of product 27837?").
 - **Response:** Provide a helpful, concise summary of the product's details, including its name, category, brand, and retail price.
@@ -115,7 +109,7 @@ Provided below is the available burger menu and its related price:
     def __init__(self):
         # Initialize the agent and model once to reuse them
         model = litellm.completion
-        self.burger_agent = Agent(
+        self.product_agent = Agent(
             role="Product Seller Agent",
             goal="Provide product details when prompted with a product ID.",
             backstory="You are a specialized agent providing product lookup services.",
