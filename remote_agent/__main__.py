@@ -18,8 +18,8 @@ from a2a.types import AgentCapabilities, AgentSkill, AgentCard
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.apps import A2AStarletteApplication
 from a2a.server.tasks import InMemoryTaskStore
-from agent import BurgerSellerAgent
-from agent_executor import BurgerSellerAgentExecutor
+from agent import ProductSellerAgent
+from agent_executor import ProductSellerAgentExecutor
 import uvicorn
 from dotenv import load_dotenv
 import logging
