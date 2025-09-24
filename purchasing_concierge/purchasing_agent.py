@@ -20,7 +20,7 @@ from typing import List
 import httpx
 
 import google.auth
-from google.adk.tools.bigquery import BigQueryCredentialsConfig, BigQueryToolset
+from google.adk.tools.bigquery import BigQueryToolset
 from google.adk import Agent
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.agents.callback_context import CallbackContext
@@ -55,12 +55,8 @@ class PurchasingAgent:
         self.agents = ""
         self.a2a_client_init_status = False
         
-        credentials, _ = google.auth.default()
-        credentials_config = BigQueryCredentialsConfig(credentials=credentials)
 
-        self.bigquery_toolset = BigQueryToolset(
-            credentials_config=credentials_config,
-        )
+        self.bigquery_toolset = BigQueryToolset()
 
     def create_agent(self) -> Agent:
         return Agent(
