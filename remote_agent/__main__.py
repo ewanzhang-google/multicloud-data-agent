@@ -36,15 +36,15 @@ logger = logging.getLogger(__name__)
 @click.option("--host", "host", default="0.0.0.0")
 @click.option("--port", "port", default=10001)
 def main(host, port):
-    """Entry point for the A2A + CrewAI Burger Seller Agent."""
+    """Entry point for the A2A + CrewAI Product Seller Agent."""
     try:
         capabilities = AgentCapabilities(streaming=True)
         skill = AgentSkill(
-            id="create_burger_order",
-            name="Burger Order Creation Tool",
-            description="Helps with creating burger orders",
-            tags=["burger order creation"],
-            examples=["I want to order 2 classic cheeseburgers"],
+            id="get_product_details",
+            name="Product Details Lookup Tool",
+            description="Retrieves product details using a product ID from static inventory.",
+            tags=["product lookup", "inventory"],
+            examples=["What are the details for product 27837?"],
         )
         
         # --- CHANGE: Simplified and clarified how the public URL is determined ---
@@ -56,18 +56,19 @@ def main(host, port):
             logger.warning(f"AGENT_BASE_URL not set, defaulting to local URL: {agent_base_url}")
         
         agent_card = AgentCard(
-            name="burger_seller_agent",
-            description="Helps with creating burger orders",
-            url=agent_base_url, # Use the determined base URL here
+            name="product_seller_agent",
+            description="Provides product details based on a product ID.",
+            url=agent_base_url, 
             version="1.0.0",
-            defaultInputModes=BurgerSellerAgent.SUPPORTED_CONTENT_TYPES,
-            defaultOutputModes=BurgerSellerAgent.SUPPORTED_CONTENT_TYPES,
+            # Use the SUPPORTED_CONTENT_TYPES from the new agent class
+            defaultInputModes=ProductSellerAgent.SUPPORTED_CONTENT_TYPES, 
+            defaultOutputModes=ProductSellerAgent.SUPPORTED_CONTENT_TYPES,
             capabilities=capabilities,
             skills=[skill],
         )
 
         request_handler = DefaultRequestHandler(
-            agent_executor=BurgerSellerAgentExecutor(),
+            agent_executor=ProductSellerAgentExecutor(),
             task_store=InMemoryTaskStore(),
         )
         server = A2AStarletteApplication(
