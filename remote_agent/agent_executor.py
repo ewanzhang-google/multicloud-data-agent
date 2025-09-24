@@ -27,14 +27,14 @@ from a2a.utils import (
     new_artifact,
 )
 from a2a.utils.errors import ServerError
-from agent import BurgerSellerAgent
+from agent import ProductSellerAgent
 
 
-class BurgerSellerAgentExecutor(AgentExecutor):
-    """Burger Seller AgentExecutor."""
+class ProductSellerAgentExecutor(AgentExecutor):
+    """Product Seller AgentExecutor."""
 
     def __init__(self):
-        self.agent = BurgerSellerAgent()
+        self.agent = ProductSellerAgent()
 
     async def execute(
         self,
@@ -51,7 +51,7 @@ class BurgerSellerAgentExecutor(AgentExecutor):
                 completed_task(
                     context.task_id,
                     context.context_id,
-                    [new_artifact(parts, f"burger_{context.task_id}")],
+                    [new_artifact(parts, f"product_{context.task_id}")],
                     [context.message],
                 )
             )
