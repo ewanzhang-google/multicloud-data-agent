@@ -113,6 +113,8 @@ Session ID: {session_id}
         print(f"AZURE_API_VERSION: {os.environ.get('AZURE_API_VERSION')}")
         print("---------------------------------")
 
+        model = litellm.completion
+        
         self.product_agent = Agent(
             role="Product Seller Agent",
             goal="Provide product details when prompted with a product ID.",
