@@ -107,6 +107,12 @@ Session ID: {session_id}
     SUPPORTED_CONTENT_TYPES = ["text", "text/plain"]
     
     def __init__(self):
+        print("--- Azure Environment Variables ---")
+        print(f"AZURE_API_KEY: {os.environ.get('AZURE_API_KEY')}")
+        print(f"AZURE_API_BASE: {os.environ.get('AZURE_API_BASE')}")
+        print(f"AZURE_API_VERSION: {os.environ.get('AZURE_API_VERSION')}")
+        print("---------------------------------")
+        
         # Initialize the agent and model once to reuse them
         model = litellm.completion
         self.product_agent = Agent(
