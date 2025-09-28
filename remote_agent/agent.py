@@ -22,7 +22,6 @@ from crewai.tools import tool
 from dotenv import load_dotenv
 import litellm
 import os
-from langchain_openai import AzureChatOpenAI
 
 # --- Configuration ---
 load_dotenv()
@@ -113,14 +112,6 @@ Session ID: {session_id}
         print(f"AZURE_API_BASE: {os.environ.get('AZURE_API_BASE')}")
         print(f"AZURE_API_VERSION: {os.environ.get('AZURE_API_VERSION')}")
         print("---------------------------------")
-        
-       # Explicitly create an Azure LLM instance
-        azure_llm = AzureChatOpenAI(
-            openai_api_version=os.environ.get("AZURE_API_VERSION"),
-            azure_deployment=os.environ.get("AZURE_DEPLOYMENT_NAME", "gpt-4.1"), # Or your deployment name
-            azure_endpoint=os.environ.get("AZURE_API_BASE"),
-            api_key=os.environ.get("AZURE_API_KEY"),
-        )
 
         self.product_agent = Agent(
             role="Product Seller Agent",
@@ -129,7 +120,7 @@ Session ID: {session_id}
             verbose=True,
             allow_delegation=False,
             tools=[get_product_details],
-            llm=azure_llm  # Pass the configured LLM here
+            model_name="azure/gpt-4.1"
         )
         print("Product Seller Agent initialized for Azure OpenAI.")
 
