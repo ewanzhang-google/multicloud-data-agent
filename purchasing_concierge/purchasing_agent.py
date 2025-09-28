@@ -62,7 +62,7 @@ class PurchasingAgent:
         return Agent(
             model="gemini-2.5-flash-lite",
             name="purchasing_agent",
-            instruction=self.root_instruction,
+            global_instruction=self.root_instruction,
             before_model_callback=self.before_model_callback,
             before_agent_callback=self.before_agent_callback,
             description=(
