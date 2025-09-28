@@ -6,17 +6,15 @@ FROM python:3.12-slim
 # Install uv, our package manager
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy the application code into the container
-ADD . /app
+# Set the working directory inside the container
 WORKDIR /app
 
-# Install dependencies using the lock file for a reproducible environment
-# This is the key change for reliable builds
-RUN uv sync --frozen
+# Copy ONLY the contents of the remote_agent directory into /app
+# This is the key change to isolate the agent's code and dependencies.
+COPY remote_agent/ .
+
+# Install the agent's specific dependencies from its own requirements.txt
+RUN uv pip install -r requirements.txt
 
 # Expose the port the container will listen on
 EXPOSE 8080
