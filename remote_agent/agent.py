@@ -17,7 +17,7 @@ limitations under the License.
 from pydantic import BaseModel
 import json
 import uuid
-from crewai import Agent, Crew, Task, Process
+from crewai import Agent, Crew, Task, Process, LLM
 from crewai.tools import tool
 from dotenv import load_dotenv
 import litellm
@@ -122,7 +122,8 @@ Session ID: {session_id}
             verbose=True,
             allow_delegation=False,
             tools=[get_product_details],
-            model_name="azure/gpt-4.1"
+            llm=LLM(model="azure/gpt-4.1")
+            # model_name="azure/gpt-4.1"
         )
         print("Product Seller Agent initialized for Azure OpenAI.")
 
