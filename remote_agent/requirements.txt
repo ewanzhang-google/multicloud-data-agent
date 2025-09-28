@@ -3,4 +3,3 @@ uvicorn
 crewai
 python-dotenv
 litellm
-langchain-openai
