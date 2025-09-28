@@ -23,9 +23,6 @@ from a2a.client.errors import (
 from a2a.client.middleware import ClientCallContext
 import requests
 
-import google.oauth2.id_token
-import google.auth.transport.requests
-
 load_dotenv()
 
 TaskCallbackArg = Task | TaskStatusUpdateEvent | TaskArtifactUpdateEvent
@@ -37,57 +34,33 @@ def _send_request(
     rpc_request_payload: dict[str, Any],
     http_kwargs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """
-    Sends a non-streaming JSON-RPC request to the agent with Google ID Token authentication.
-    """
-    
-    # 1. Fetch Google ID Token for authentication
-    try:
-        # Request object for fetching token
-        auth_request = google.auth.transport.requests.Request()
-        
-        # self.url is the target audience (REMOTE_SELLER_AGENT_URL)
-        id_token = google.oauth2.id_token.fetch_id_token(
-            auth_request, audience=self.url
-        )
-        
-        # Prepare the Authorization header
-        auth_headers = {"Authorization": f"Bearer {id_token}"}
-    except Exception as e:
-        # Fail immediately if token fetching is the issue
-        raise A2AClientHTTPError(
-            500, f"Failed to fetch ID Token for A2A request: {e}"
-        ) from e
+    """Sends a non-streaming JSON-RPC request to the agent.
 
-    # 2. Merge headers with any provided http_kwargs
-    merged_http_kwargs = http_kwargs or {}
-    
-    # Ensure any existing headers are preserved and inject our auth header
-    merged_http_kwargs["headers"] = merged_http_kwargs.get("headers", {})
-    merged_http_kwargs["headers"].update(auth_headers)
+    Args:
+        rpc_request_payload: JSON RPC payload for sending the request.
+        http_kwargs: Optional dictionary of keyword arguments to pass to the
+            underlying post request.
 
-    # 3. Send the request using the synchronous 'requests' library
+    Returns:
+        The JSON response payload as a dictionary.
+
+    Raises:
+        A2AClientHTTPError: If an HTTP error occurs during the request.
+        A2AClientJSONError: If the response body cannot be decoded as JSON.
+    """
     try:
         response = requests.post(
-            self.url,
-            json=rpc_request_payload,
-            **merged_http_kwargs,
+            self.url, json=rpc_request_payload, **(http_kwargs or {})
         )
-        # Will raise requests.HTTPError for 4xx/5xx status codes (including 401/403)
         response.raise_for_status()
-        
         return response.json()
-    except requests.Timeout as e:
-        # Catch requests library timeout
+    except httpx.ReadTimeout as e:
         raise A2AClientTimeoutError("Client Request timed out") from e
-    except requests.HTTPError as e:
-        # Catch HTTP error (this is where 401/403 errors will now be caught)
+    except httpx.HTTPStatusError as e:
         raise A2AClientHTTPError(e.response.status_code, str(e)) from e
     except json.JSONDecodeError as e:
-        # Catch JSON decoding error
         raise A2AClientJSONError(str(e)) from e
-    except requests.RequestException as e:
-        # Catch general requests network communication error
+    except httpx.RequestError as e:
         raise A2AClientHTTPError(503, f"Network communication error: {e}") from e
 
 
