@@ -122,7 +122,7 @@ Session ID: {session_id}
             verbose=True,
             allow_delegation=False,
             tools=[get_product_details],
-            llm=LLM(model="azure/gpt-4.1")
+            llm=LLM(model="azure/gpt-4o")
             # model_name="azure/gpt-4.1"
         )
         print("Product Seller Agent initialized for Azure OpenAI.")
