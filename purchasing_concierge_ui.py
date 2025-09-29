@@ -103,7 +103,7 @@ if __name__ == "__main__":
     demo = gr.ChatInterface(
         get_response_from_agent,
         title="Purchasing Concierge",
-        description="This assistant can help you to purchase food from remote sellers.",
+        description="An agent-to-agent chat assistant. Query for order details and interact with a remote seller agent for product details.",
         type="messages",
     )
 
