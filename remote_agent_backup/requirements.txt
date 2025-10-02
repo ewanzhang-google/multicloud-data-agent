@@ -1,6 +1,0 @@
-a2a
-fastapi
-uvicorn
-crewai
-python-dotenv
-litellm
