@@ -139,15 +139,14 @@ Second we will run our A2A client capabilities owned by purchasing concierge age
 
 2. Run the Gradio app
 
+```bash
+uv sync --frozen
+uv run purchasing_concierge_ui.py
+```
+
 3. Sample queries
 "Can you analyse the order table and give me a count of orders for the top 5 products?"
 "Can you provide me the details of product id 23456?"
 <img width="1908" height="1106" alt="image" src="https://github.com/user-attachments/assets/1b16c4da-452f-426b-bc15-43a464664e4f" />
 <img width="1908" height="1106" alt="image" src="https://github.com/user-attachments/assets/e61a0249-f591-442e-95bf-3128e0150c5d" />
 <img width="1908" height="1106" alt="image" src="https://github.com/user-attachments/assets/5b7693f0-4b5b-422e-9319-a1437a621c49" />
-
-
-```bash
-uv sync --frozen
-uv run purchasing_concierge_ui.py
-```
