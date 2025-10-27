@@ -77,7 +77,7 @@ class PurchasingAgent:
 
     def root_instruction(self, context: ReadonlyContext) -> str:
         current_agent = self.check_active_agent(context)
-        return f"""You are an expert purchasing agent who can query the table ewans-demo-project.thelook_ecommerce.order_items to answer questions related to orders,
+        return f"""You are an expert purchasing agent who can query the table bigquery-public-data.thelook_ecommerce.order_items to answer questions related to orders,
         but you MUST delegate product-specific inquiries to the appropriate remote agent.
 
 Execution:
